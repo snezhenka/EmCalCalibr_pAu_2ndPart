@@ -213,18 +213,6 @@ void one_run_norm(const TString &directory)
     
                    graph->Write(Form("graph_sector_%d", sector));
                            
-                           // Создание графика без учета ошибок
-                       /*    TGraph *graphic = new TGraph(filtered_segment_numbers.size(),
-                                                      filtered_segment_numbers.data(),
-                                                      filtered_means.data());
-                           graphic->SetMarkerStyle(20);  //
-                           graphic->SetMarkerSize(1);  //
-                           graphic->SetMarkerColor(kBlack);
-                           TCanvas *c2 = new TCanvas(Form("const_fit_sector_%d", sector), "Graph with Constant Fit", 800, 600);
-                           graphic->Fit(fit_const, "Q");
-                              graphic->Draw("APE");
-                           fit_const->Draw("same");
-                           graphic->Write(Form("graphic_sector_%d", sector)); */
                }
                }
                outFile->Close();
