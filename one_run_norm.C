@@ -27,7 +27,7 @@ void one_run_norm(const TString &directory)
        
             std::string a = ent->d_name;
             a.erase(0,3);
-            std::string outfilename("/Users/apple/GetYourPHD/Trains/pAu_EmCalCalib/1DHistsFgBg/out_");
+            std::string outfilename("/home/pc/Trains/EmCalCalib_pAu/1DHistsFgBg/out_");
             outfilename.append(a);
             TFile *in_runs = new TFile(outfilename.c_str(), "RECREATE");
 
@@ -140,18 +140,18 @@ void one_run_norm(const TString &directory)
                 closedir(dir);
         
         // Plotting
-               TFile *outFile = new TFile("/Users/apple/GetYourPHD/Trains/pAu_EmCalCalib/1DHistsFgBg/graphs.root", "RECREATE");
+               TFile *outFile = new TFile("/home/pc/Trains/EmCalCalib_pAu/1DHistsFgBg/graphs.root", "RECREATE");
                for (int sector = 0; sector < num_sectors; sector++) {
                    std::vector<Double_t> filtered_segment_numbers;
                        std::vector<Double_t> filtered_means;
                        std::vector<Double_t> filtered_errors;
 
                        for (size_t i = 0; i < segment_numbers[sector].size(); i++) {
-                           if (errors[sector][i] <= 0.002 & errors[sector][i] > 0.00002 & means[sector][i] < 0.14 & means[sector][i] > 0.13) { // выставляем ограничение по ошибке и среднему
+                         //  if (errors[sector][i] <= 0.002 & errors[sector][i] > 0.00002 & means[sector][i] < 0.14 & means[sector][i] > 0.13) { // выставляем ограничение по ошибке и среднему
                                filtered_segment_numbers.push_back(segment_numbers[sector][i]);
                                filtered_means.push_back(means[sector][i]);
                                filtered_errors.push_back(errors[sector][i]);
-                           }
+                         //  }
                        }
 
                        if (filtered_segment_numbers.size() > 0) { //есть ли элементы
