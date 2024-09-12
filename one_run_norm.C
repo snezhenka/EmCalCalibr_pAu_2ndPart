@@ -31,16 +31,17 @@ void one_run_norm(const TString &directory)
             outfilename.append(a);
             TFile *in_runs = new TFile(outfilename.c_str(), "RECREATE");
 
-            
             // Check if the file matches the pattern *_se.root
             if (filename.BeginsWith("se-") &&
                 filename.Length() == 14 &&
-                filename.EndsWith(".root")) {    //если файл кончается на что-то то пишем EndsWith
+                filename.EndsWith(".root") && (filename != "se-435111.root") && (filename != "se-435112.root") && (filename != "se-435113.root")
+                && (filename != "se-435114.root") && (filename != "se-435115.root")&& (filename != "se-433284.root")
+                && (filename != "se-433283.root") && (filename != "se-435184.root") && (filename != "se-435490.root" )&& (filename != "se-435487.root" )
+                && (filename != "se-433007.root") && (filename != "se-435832.root") && (filename != "se-433290.root") && (filename != "se-433285.root")) {    //если файл кончается на что-то то пишем EndsWith
                 TString fullPath = directory + "/" + filename;
                 TFile *file = TFile::Open(fullPath, "read");
     
-    
-  
+
     
     std::string hz("se-432639.root");
     hz.erase(0,3);
@@ -52,8 +53,9 @@ void one_run_norm(const TString &directory)
 
     	
     	for (int sector = 0; sector<8; sector++)
+
     	{
-            
+            int nRebin = 5;
             TH3D *bg = (TH3D*)file->Get("background")->Clone();
             TH3D *fg = (TH3D*)file->Get("foreground")->Clone();
     	int sec_bin = bg->GetYaxis()->FindBin((2*sector+1)/2);
@@ -72,16 +74,15 @@ void one_run_norm(const TString &directory)
     	std::string histname_fg("fg_run_sec_"); //гистограмма одномерная для fg
     	histname_fg.append(sektor);
     	
-    	TH1D* m_bg_hi_pt = (TH1D*)bg->ProjectionX(histname_bg.c_str(),sec_bin,sec_bin,2,10); //создание одномерной сразу из трехмерной,от 2 до 10 это импульс
-    	TH1D* m_fg_hi_pt = (TH1D*)fg->ProjectionX(histname_fg.c_str(),sec_bin,sec_bin,2,10);
-    
-
+    	TH1D* m_bg_hi_pt = (TH1D*)bg->ProjectionX(histname_bg.c_str(),sec_bin,sec_bin,3,10); //создание одномерной сразу из трехмерной,от 2 до 10 это импульс
+    	TH1D* m_fg_hi_pt = (TH1D*)fg->ProjectionX(histname_fg.c_str(),sec_bin,sec_bin,3,10);
 
 	TH1F *back = (TH1F*)m_bg_hi_pt->Clone();
 	TH1F *razn = (TH1F*)m_fg_hi_pt->Clone();
+            back->Rebin(nRebin);
+            razn->Rebin(nRebin);
 	int left = m_fg_hi_pt->FindBin(0.1);
 	int right = m_fg_hi_pt->FindBin(0.2);
-	
 	double int_fg_l = m_fg_hi_pt->Integral(1,left);
 	double int_fg_r = m_fg_hi_pt->Integral(right,m_fg_hi_pt->GetNbinsX());
 	double int_fg = int_fg_l + int_fg_r;
@@ -89,33 +90,51 @@ void one_run_norm(const TString &directory)
 	double int_bg_l = m_bg_hi_pt->Integral(1,left);
 	double int_bg_r = m_bg_hi_pt->Integral(right,m_bg_hi_pt->GetNbinsX());
 	double int_bg = int_bg_l + int_bg_r;
-	
+
 	back->Scale(int_fg/int_bg);
 	razn->Add(back,-1);
-    	
+         //   std::cout << int_fg << " " << int_bg << " " << int_fg/int_bg << " " << int_bg/int_fg << std::endl;
+          //  std::cout << int_fg_l << " " << int_fg_r << " " << int_bg_r<< " " << int_bg_l << std::endl;
+          //  std::cout << left << " " << right << std::endl;
     	hz.erase(11,1);
     	hz.append(sektor);
     	
     	 std::string fist_name("fist_run_sec_");
    	 fist_name.append(sektor);
-   	 
-    	 
+
    	 
    	 TF1 *fist_M = new TF1(hz.c_str(),"gaus(0)+pol2(3)", 0.05, 0.25);
-   	 
-   	 fist_M->SetParameter(0,1e6);
+            //=====================установка высот пиков вручную=============
+
+  	 fist_M->SetParameter(0,100);
    	 fist_M->SetParameter(1,0.135);
    	 fist_M->SetParameter(2,0.015);
-   	 
-   	
-   	 
-    	 razn->Fit(fist_M, "0","QR");
-    	 
-            
-    	 fist_M->SetParLimits(0,1,300e6);
-   	 fist_M->SetParLimits(1,0.12,0.15);
-   	 fist_M->SetParLimits(2,0.005,0.03);
-   	 
+            fist_M->SetParLimits(0,12,1000);
+            fist_M->SetParLimits(1,0.12,0.15);
+            fist_M->SetParLimits(2,0.005,0.03);
+          /*  if  ((sector==0) && (filename == "se-435832.root")) {
+                fist_M->SetParameter(0,12);
+            } */
+            if  ((sector==3) && (filename == "se-435724.root")) {
+                //  fist_M->SetParLimits(0,25,30);
+                fist_M->SetParameter(0,27);
+            }
+            if  ((sector==4) && (filename == "se-433538.root")) {
+                fist_M->SetParLimits(0,6,8);
+                fist_M->SetParameter(0,7);
+            }
+          //  if  ((sector==2) && (filename == "se-433290.root")) {
+              //  fist_M->SetParLimits(0,6,8);
+              //  fist_M->SetParameter(0,7);
+              //  fist_M->FixParameter(1,0.13); //читерство
+              //  fist_M->FixParameter(2,0.001);
+           // }
+            if  ((sector==1) && (filename == "se-434690.root")) {
+                fist_M->SetParLimits(0,16,18);
+                fist_M->SetParameter(0,17);
+            }
+    	// razn->Fit(fist_M, "0","QR");
+
    	 razn->Fit(fist_M, "QR");
     	 
     	 sr = fist_M -> GetParameter(1);//srznach
@@ -139,6 +158,9 @@ void one_run_norm(const TString &directory)
     
                 closedir(dir);
         
+        // Create a vector to store constants for each sector
+               std::vector<double> constants(num_sectors, 0.0);
+        
         // Plotting
                TFile *outFile = new TFile("/home/pc/Trains/EmCalCalib_pAu/1DHistsFgBg/graphs.root", "RECREATE");
                for (int sector = 0; sector < num_sectors; sector++) {
@@ -147,12 +169,14 @@ void one_run_norm(const TString &directory)
                        std::vector<Double_t> filtered_errors;
 
                        for (size_t i = 0; i < segment_numbers[sector].size(); i++) {
-                         //  if (errors[sector][i] <= 0.002 & errors[sector][i] > 0.00002 & means[sector][i] < 0.14 & means[sector][i] > 0.13) { // выставляем ограничение по ошибке и среднему
+                         //  if (errors[sector][i] <= 0.002 & errors[sector][i] > 0.00002 & means[sector][i] < 0.14 & means[sector][i] > 0.13) {
+                         // выставляем ограничение по ошибке и среднему
+                         //  if ( means[sector][i] < 0.145 ) {
                                filtered_segment_numbers.push_back(segment_numbers[sector][i]);
                                filtered_means.push_back(means[sector][i]);
                                filtered_errors.push_back(errors[sector][i]);
-                         //  }
-                       }
+                           }
+                     //  }
 
                        if (filtered_segment_numbers.size() > 0) { //есть ли элементы
                            // Создание вектора пар data, первая часть сегменты данных,потом средние и их ошибки
@@ -185,6 +209,7 @@ void one_run_norm(const TString &directory)
                                                                         filtered_means.data(),
                                                                         0,
                                                                         filtered_errors.data());
+
                            graph->SetLineStyle(0);
                  /*  TGraphErrors *graph = new TGraphErrors(segment_numbers[sector].size(),
                                                            segment_numbers[sector].data(),
@@ -201,6 +226,7 @@ void one_run_norm(const TString &directory)
                            fit_const->SetParLimits(0,0.13,0.14);
                               graph->Fit(fit_const, "Q");
                            double constant = fit_const->GetParameter(0);
+                           constants[sector] = constant;
                            std::cout << "Constant of the fit: " << constant << std::endl;
                               fit_const->SetLineColor(kRed);
                               fit_const->SetLineWidth(2);
@@ -208,11 +234,23 @@ void one_run_norm(const TString &directory)
                           graph->SetMarkerSize(0.7);
                            graph->SetMarkerStyle(20); //круг
                            TCanvas *c1 = new TCanvas(Form("const_fit_sector_%d", sector), "Graph with Constant Fit", 800, 600);
-                              graph->Draw("APE");
-                              fit_const->Draw("same");
+                             // graph->Draw("APE");
+                            //  fit_const->Draw("same");
     
                    graph->Write(Form("graph_sector_%d", sector));
-                           
+
+                           //теперь отбор сегментов данных==================================
+                                        //файл где будут храниться сегменты данных и корректирующие коэффициенты
+                            std::string out("/home/pc/Trains/EmCalCalib_pAu/1DHistsFgBg/run_by_run_corr.txt");
+                            std::ofstream fout(out.c_str());
+                            for (int sector = 0; sector < num_sectors; sector++) {
+
+                                                              for (size_t i=0; i < filtered_means.size(); ++i) {
+                                                                  double corr = filtered_means[i] / constants[sector];
+                                                                  fout << filtered_segment_numbers[i] << " " << sector << " " << corr << std::endl;
+                                                              }
+                                                      }
+                                             fout.close();
                }
                }
                outFile->Close();
